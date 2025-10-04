@@ -1,4 +1,5 @@
 import { DecisionLoan } from "../model/DecisionLoan";
+import { DecisionResultPublisher } from "../model/gateway/DecisionResultPublisher";
 import { DebtVO } from "../model/vo/DebtVO";
 import { SalaryVo } from "../model/vo/SalaryVO";
 import { DebtCommand, DecisionLoanCommand } from "./Command";
@@ -6,9 +7,15 @@ import { IDecisionLoanUseCase } from "./IUseCase";
 
 export class DecisionLoanUseCase implements IDecisionLoanUseCase {
 
-  async execute(command: DecisionLoanCommand): Promise<Boolean> {
-    return this.checkParams(command)
-        .isApprovedLoanSubmitted();
+  constructor(
+    private readonly publisher: DecisionResultPublisher
+  ) {}
+
+  async execute(command: DecisionLoanCommand): Promise<void> {
+    const result = this.checkParams(command)
+        .getFinalDecisionOfCreditDebt();
+
+    await this.publisher.publish(result);
   }
 
   private checkParams (cmd: DecisionLoanCommand) : DecisionLoan {

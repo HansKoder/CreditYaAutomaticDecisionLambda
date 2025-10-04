@@ -1,4 +1,5 @@
 import { DebtVO } from "./vo/DebtVO";
+import { DecisionResultVO } from "./vo/DecisionResultVO";
 import { SalaryVo } from "./vo/SalaryVO";
 
 export interface DecisionLoanProps {
@@ -45,6 +46,21 @@ export class DecisionLoan {
 
   isApprovedLoanSubmitted (): boolean {
     return this.calculationAvailableBorrowingCapacity() > this.loanSubmitted.getMonthlyDebt();
+  }
+
+  getFinalDecisionOfCreditDebt (): DecisionResultVO {
+    let loanId = this.loanSubmitted.getLoanId();
+    if (this.isApprovedLoanSubmitted()) {
+      return new DecisionResultVO(
+        loanId,
+        'APPROVED',
+        'Customer has capacity of debt');
+    }
+
+    return new DecisionResultVO(
+        loanId,
+        'APPROVED',
+        'Customer does not have capacity debt');
   }
   
 }
