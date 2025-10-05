@@ -1,35 +1,94 @@
+import to from "await-to-js";
+import { DecisionResultPublisher } from "../../../src/domain/model/gateway/DecisionResultPublisher";
+import { DecisionResultVO } from "../../../src/domain/model/vo/DecisionResultVO";
 import { DecisionLoanCommand } from "../../../src/domain/usecase/Command";
 import { DecisionLoanUseCase } from "../../../src/domain/usecase/UseCase";
+import { SQSInfraException } from "../../../src/infrastructure/adapters/sqs/exception/SQSInfraException";
 
 describe("Domain (UseCase) UseCase", () => {
-    it("should get TRUE since the user complies with risk policies correctly", async () => {
 
-        const props: DecisionLoanCommand = {
-            currentLoanAmount: 1000,
-            currentLoanId: '103',
-            customerSalary: 10000,
-            debts: [ { "debt": 1000, "loanId": "101"}, { "debt": 1000, "loanId": "102"}]
+    it('(execute) Should be published with final decision (approved)', async () => {
+
+        class MockPublisher implements DecisionResultPublisher {
+            async publish(_: any): Promise<void> { }
+        }
+
+        const publisher = new MockPublisher();
+        const spy = jest.spyOn(publisher, "publish").mockResolvedValue();
+
+        const useCase = new DecisionLoanUseCase(publisher);
+
+        const command: DecisionLoanCommand = {
+            customerSalary: 1200,
+            currentLoanId: '102',
+            currentLoanAmount: 100,
+            debts: [{ loanId: '101', debt: 100 }]
         };
 
-        const usecase = new DecisionLoanUseCase();
-        const resp = await usecase.execute(props);
+        await useCase.execute(command);
 
-        expect(resp).toBeTruthy();
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        const expectedResult = new DecisionResultVO('102', 'APPROVED', 'Customer has debt capacity');
+        expect(spy).toHaveBeenCalledWith(expectedResult);
     });
 
-        it("should return FASLE since the user does not comply with risk policies correctly", async () => {
 
-        const props: DecisionLoanCommand = {
-            currentLoanAmount: 3000,
+    it('(execute) Should be published with final decision (rejected) since the customer has a bunch of debts', async () => {
+
+        class MockPublisher implements DecisionResultPublisher {
+            async publish(_: any): Promise<void> { }
+        }
+
+        const publisher = new MockPublisher();
+        const spy = jest.spyOn(publisher, "publish").mockResolvedValue();
+
+        const useCase = new DecisionLoanUseCase(publisher);
+
+        const command: DecisionLoanCommand = {
+            customerSalary: 1200,
             currentLoanId: '103',
-            customerSalary: 10000,
-            debts: [ { "debt": 1000, "loanId": "101"}, { "debt": 1000, "loanId": "102"}]
+            currentLoanAmount: 300,
+            debts: [
+                { loanId: '101', debt: 100 },
+                { loanId: '102', debt: 300 }
+            ]
         };
 
-        const usecase = new DecisionLoanUseCase();
-        const resp = await usecase.execute(props);
+        await useCase.execute(command);
 
-        expect(resp).toBeFalsy();
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        const expectedResult = new DecisionResultVO('103', 'REJECTED', 'Customer does not have debt capacity');
+        expect(spy).toHaveBeenCalledWith(expectedResult);
     });
+
+    it('(execute) Should have a throw error', async () => {
+
+        class MockPublisher implements DecisionResultPublisher {
+            async publish(_: any): Promise<void> { }
+        }
+
+        const publisher = new MockPublisher();
+        const spy = jest
+            .spyOn(publisher, "publish")
+            .mockRejectedValue(new SQSInfraException("Unexpected error"));
+
+        const useCase = new DecisionLoanUseCase(publisher);
+
+        const command: DecisionLoanCommand = {
+            customerSalary: 1200,
+            currentLoanId: "102",
+            currentLoanAmount: 100,
+            debts: [{ loanId: "101", debt: 100 }],
+        };
+
+        const [err, _] = await to(useCase.execute(command));
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(err).toBeInstanceOf(SQSInfraException);
+        expect(err?.message).toBe("Unexpected error");
+    });
+
 });
 

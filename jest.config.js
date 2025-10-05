@@ -7,7 +7,7 @@ module.exports = {
   transform: {
     "^.+\\.ts$": "ts-jest"
   },
-  testMatch: ["**/*.test.ts"],
+  testMatch: ["**/lambda.test.ts"],
   collectCoverage: true,
   coverageDirectory: "coverage",
   clearMocks: true

@@ -27,7 +27,7 @@ export class DecisionLoan {
   }
 
   // Business Rules
-  currentMonthlyDebtCalculation (): number {
+  private currentMonthlyDebtCalculation (): number {
     return this.currentDebts
     .map(i => i.getMonthlyDebt())
     .reduce((a: number, b: number) => {
@@ -35,32 +35,32 @@ export class DecisionLoan {
     },this.INIT_VALUE)
   }
 
-  calculationMaximumBorrowingCapacity (): number {
+  private calculationMaximumBorrowingCapacity (): number {
     return this.salary.getValue() * this.POLICY_RISK;
   }
 
-  calculationAvailableBorrowingCapacity (): number {
+  private calculationAvailableBorrowingCapacity (): number {
     return this.calculationMaximumBorrowingCapacity() 
     - this.currentMonthlyDebtCalculation();
   }
 
-  isApprovedLoanSubmitted (): boolean {
+  private isApprovedLoanSubmitted (): boolean {
     return this.calculationAvailableBorrowingCapacity() > this.loanSubmitted.getMonthlyDebt();
   }
 
-  getFinalDecisionOfCreditDebt (): DecisionResultVO {
+  public getFinalDecisionOfCreditDebt (): DecisionResultVO {
     let loanId = this.loanSubmitted.getLoanId();
     if (this.isApprovedLoanSubmitted()) {
       return new DecisionResultVO(
         loanId,
         'APPROVED',
-        'Customer has capacity of debt');
+        'Customer has debt capacity');
     }
 
     return new DecisionResultVO(
         loanId,
-        'APPROVED',
-        'Customer does not have capacity debt');
+        'REJECTED',
+        'Customer does not have debt capacity');
   }
   
 }
