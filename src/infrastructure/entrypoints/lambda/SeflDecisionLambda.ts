@@ -32,7 +32,8 @@ export class SeflDecisionLambda {
         let payload: DecisionLoanCommand;
 
         try {
-            return payload = JSON.parse(record.body) as DecisionLoanCommand;            
+            payload = JSON.parse(record.body) as DecisionLoanCommand;            
+            return payload;
         } catch (err) {
             console.log(`[infra.entrypoint.lambda] (handler) error=invalid JSON body, Payload=[ body:${record.body} ]`);
             throw new LambdaInfraException('Invalid Json Body');
