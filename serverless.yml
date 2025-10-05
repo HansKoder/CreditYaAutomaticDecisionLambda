@@ -1,4 +1,4 @@
-service: self-decision-service
+service: decision-service
 
 provider:
   name: aws
@@ -6,8 +6,8 @@ provider:
   region: us-east-2
   environment:
     REGION: us-east-2
-    REQUEST_QUEUE_URL: http://localhost:4566/000000000000/self-decision-request-queue
-    RESPONSE_QUEUE_URL: http://localhost:4566/000000000000/self-decision-response-queue
+    REQUEST_QUEUE_URL: http://localhost:4566/000000000000/decision-request-queue
+    RESPONSE_QUEUE_URL: http://localhost:4566/000000000000/decision-response-queue
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -38,6 +38,18 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: decision-response-queue
+
+plugins:
+  - serverless-localstack
+  - serverless-offline
+  - serverless-offline-sqs
+
+custom:
+  localstack:
+    stages:
+      - local
+    host: http://localhost
+    edgePort: 4566
 
 package:
   individually: true
