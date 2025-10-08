@@ -28,24 +28,46 @@ export class DecisionLoan {
 
   // Business Rules
   private currentMonthlyDebtCalculation (): number {
-    return this.currentDebts
+    console.log(`[domain] (currentMonthlyDebtCalculation) payload=[ loanID:{${this.loanSubmitted.getLoanId()}}, debts:{${JSON.stringify(this.currentDebts)}} ]`);
+
+    const debt = this.currentDebts
     .map(i => i.getMonthlyDebt())
     .reduce((a: number, b: number) => {
       return a + b;
-    },this.INIT_VALUE)
+    },this.INIT_VALUE);
+
+    console.log(`[domain] (currentMonthlyDebtCalculation) calculated debt, response=[ debt:{${debt}} ]`);
+
+    return debt;
   }
 
   private calculationMaximumBorrowingCapacity (): number {
-    return this.salary.getValue() * this.POLICY_RISK;
+    console.log(`[domain] (calculationMaximumBorrowingCapacity) payload=[ loanID:{${this.loanSubmitted.getLoanId()}}`);
+    const max = this.salary.getValue() * this.POLICY_RISK;
+
+    console.log(`[domain] (calculationMaximumBorrowingCapacity) calculated capacity debt, response=[ maxCapacity:{${max}} ]`);
+
+    return max;
   }
 
   private calculationAvailableBorrowingCapacity (): number {
-    return this.calculationMaximumBorrowingCapacity() 
+    console.log(`[domain] (calculationAvailableBorrowingCapacity) payload=[ loanID:{${this.loanSubmitted.getLoanId()}}`);
+
+    const avaialable = this.calculationMaximumBorrowingCapacity() 
     - this.currentMonthlyDebtCalculation();
+
+    console.log(`[domain] (calculationAvailableBorrowingCapacity) calculated max avaiable, response=[ available:{${avaialable}} ]`);
+
+    return avaialable;
   }
 
   private isApprovedLoanSubmitted (): boolean {
-    return this.calculationAvailableBorrowingCapacity() > this.loanSubmitted.getMonthlyDebt();
+    const avaialable = this.calculationAvailableBorrowingCapacity();
+    const currentDebt = this.loanSubmitted.getMonthlyDebt();
+
+    console.log(`[domain] (isApprovedLoanSubmitted), payload=[ loanId:{${this.loanSubmitted.getLoanId()}}, available:{${avaialable}}, currentDebt:{${currentDebt} } ]`);
+
+    return avaialable > currentDebt;
   }
 
   public getFinalDecisionOfCreditDebt (): DecisionResultVO {

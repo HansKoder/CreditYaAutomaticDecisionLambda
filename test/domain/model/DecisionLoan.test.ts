@@ -35,7 +35,7 @@ describe("Domain (aggregateroot) DecisionLoan", () => {
         const domain = DecisionLoan.create({
             debts: list,
             customerSalary: SalaryVo.create(10000),
-            loanSubmitted: DebtVO.create('103', 3000)
+            loanSubmitted: DebtVO.create('103', 1500)
         })
 
         let response: DecisionResultVO = domain.getFinalDecisionOfCreditDebt();
@@ -45,7 +45,6 @@ describe("Domain (aggregateroot) DecisionLoan", () => {
         expect(response.getReason()).toEqual('Customer does not have debt capacity');
         expect(response.getResolutionType()).toEqual('SELF_DECISION');
     }); 
-
 
 
 });

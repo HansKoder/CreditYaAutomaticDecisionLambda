@@ -43,7 +43,7 @@ aws sqs list-queues \
 
 ```cmd
 aws sqs send-message \
-  --queue-url http://localhost:4566/000000000000/decision-request-queue \
+  --queue-url http://localhost:4566/000000000000/decisions-request-queue \
   --message-body '{
     "customerSalary": 1500,
     "currentLoanId": "001",
@@ -60,7 +60,7 @@ aws sqs send-message \
 
 ```cmd
 aws sqs send-message \
-  --queue-url http://localhost:4566/000000000000/decision-request-queue \
+  --queue-url http://localhost:4566/000000000000/decisions-request-queue \
   --message-body '{
     "customerSalary": 1500,
     "currentLoanId": "001",
@@ -72,11 +72,39 @@ aws sqs send-message \
 
 ```
 
-## SQS Verify - response.
+## SQS Verify decisions-response - response.
 
 ```cmd
 aws sqs receive-message \
-  --queue-url http://localhost:4566/000000000000/decision-response-queue \
+  --queue-url http://localhost:4566/000000000000/decisions-response-queue \
+  --endpoint-url http://localhost:4566 \
+  --region us-east-2
+```
+
+
+## SQS Verify decisions-request - response.
+
+```cmd
+aws sqs receive-message \
+  --queue-url http://sqs.us-east-2.localhost.localstack.cloud:4566/000000000000/decisions-request-queue \
+  --endpoint-url http://localhost:4566 \
+  --region us-east-2
+```
+
+## SQS remove queues notifications
+
+```cmd
+aws sqs purge-queue \
+  --queue-url http://sqs.us-east-2.localhost.localstack.cloud:4566/000000000000/notifications-queue \
+  --endpoint-url http://localhost:4566 \
+  --region us-east-2
+```
+
+## SQS remove queues decisions
+
+```cmd
+aws sqs purge-queue \
+  --queue-url http://sqs.us-east-2.localhost.localstack.cloud:4566/000000000000/decisions-request-queue \
   --endpoint-url http://localhost:4566 \
   --region us-east-2
 ```
