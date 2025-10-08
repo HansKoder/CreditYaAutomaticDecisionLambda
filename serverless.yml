@@ -1,0 +1,62 @@
+service: decision-service
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-2
+  environment:
+    REGION: us-east-2
+    REQUEST_QUEUE_URL: http://localhost:4566/000000000000/decisions-request-queue
+    RESPONSE_QUEUE_URL: http://localhost:4566/000000000000/decisions-response-queue
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:ReceiveMessage
+        - sqs:DeleteMessage
+        - sqs:GetQueueAttributes
+        - sqs:SendMessage
+      Resource: "*"
+
+functions:
+  decisionLambda:
+    handler: dist/infrastructure/entrypoints/lambda/lambda.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - RequestQueue
+              - Arn
+
+resources:
+  Resources:
+    RequestQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: decisions-request-queue
+
+    ResponseQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: decisions-response-queue
+
+plugins:
+  - serverless-localstack
+  - serverless-offline
+  - serverless-offline-sqs
+
+custom:
+  localstack:
+    stages:
+      - local
+    host: http://localhost
+    edgePort: 4566
+
+package:
+  individually: true
+  patterns:
+    - '!test/**'
+    - '!src/**'
+    - '!coverage/**'
+    - '!*.md'
+    - '!tsconfig.json'
+    - '!jest.config.js'

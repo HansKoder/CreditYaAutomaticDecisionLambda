@@ -1,40 +1,11 @@
 import { DecisionLoan } from "../../../src/domain/model/DecisionLoan";
 import { DebtVO } from "../../../src/domain/model/vo/DebtVO";
+import { DecisionResultVO } from "../../../src/domain/model/vo/DecisionResultVO";
 import { SalaryVo } from "../../../src/domain/model/vo/SalaryVO";
 
 describe("Domain (aggregateroot) DecisionLoan", () => {
 
-    it("should get current sum of all actived debts", () => {
-        const list: DebtVO[] = [
-            DebtVO.create('101', 1500),
-            DebtVO.create('102', 1500)
-        ]
-
-        const domain = DecisionLoan.create({
-            debts: list,
-            customerSalary: SalaryVo.create(9000),
-            loanSubmitted: DebtVO.create('103', 2000)
-        })
-
-        expect(domain.currentMonthlyDebtCalculation())
-        .toEqual(3000)
-    }); 
-
-
-    it("should get max capacity debt on base customer salary", () => {
-
-        const domain = DecisionLoan.create({
-            debts: [],
-            customerSalary: SalaryVo.create(10000),
-            loanSubmitted: DebtVO.create('103', 2000)
-        })
-
-        expect(domain.calculationMaximumBorrowingCapacity())
-        .toEqual(3500)
-    }); 
-
-
-    it("should get 1500 (available borrowing capacity)", () => {
+    it("(getFinalDecisionOfCreditDebt) Should be approved since customer has debt capacity", () => {
         const list: DebtVO[] = [
             DebtVO.create('101', 1000),
             DebtVO.create('102', 1000)
@@ -46,11 +17,16 @@ describe("Domain (aggregateroot) DecisionLoan", () => {
             loanSubmitted: DebtVO.create('103', 1000)
         })
 
-        expect(domain.calculationAvailableBorrowingCapacity())
-        .toEqual(1500)
+        let response: DecisionResultVO = domain.getFinalDecisionOfCreditDebt();
+
+        expect(response.getLoanId()).toEqual('103');
+        expect(response.getDecision()).toEqual('APPROVED');
+        expect(response.getReason()).toEqual('Customer has debt capacity');
+        expect(response.getResolutionType()).toEqual('SELF_DECISION');
     }); 
 
-    it("should get (TRUE) since loan submitted debt is 1000 and avaialable borrowing is 1500", () => {
+
+    it("(getFinalDecisionOfCreditDebt) Should be rejected since customer does not have debt capacity", () => {
         const list: DebtVO[] = [
             DebtVO.create('101', 1000),
             DebtVO.create('102', 1000)
@@ -59,28 +35,15 @@ describe("Domain (aggregateroot) DecisionLoan", () => {
         const domain = DecisionLoan.create({
             debts: list,
             customerSalary: SalaryVo.create(10000),
-            loanSubmitted: DebtVO.create('103', 1000)
+            loanSubmitted: DebtVO.create('103', 1500)
         })
 
-        expect(domain.isApprovedLoanSubmitted())
-        .toBeTruthy()
-    }); 
+        let response: DecisionResultVO = domain.getFinalDecisionOfCreditDebt();
 
-
-    it("should get (FALSE) since loan submitted debt is 3000 and avaialable borrowing is 1500", () => {
-        const list: DebtVO[] = [
-            DebtVO.create('101', 1000),
-            DebtVO.create('102', 1000)
-        ]
-
-        const domain = DecisionLoan.create({
-            debts: list,
-            customerSalary: SalaryVo.create(10000),
-            loanSubmitted: DebtVO.create('103', 3000)
-        })
-
-        expect(domain.isApprovedLoanSubmitted())
-        .toBeFalsy();
+        expect(response.getLoanId()).toEqual('103');
+        expect(response.getDecision()).toEqual('REJECTED');
+        expect(response.getReason()).toEqual('Customer does not have debt capacity');
+        expect(response.getResolutionType()).toEqual('SELF_DECISION');
     }); 
 
 
